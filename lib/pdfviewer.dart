@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:flutter/services.dart';
-
+import 'handle_saved_words.dart';
+import 'translate_util.dart';
 
 class Book extends StatefulWidget {
   late File bookPath;
@@ -35,9 +36,7 @@ class _BookState extends State<Book> {
     super.initState();
   }
 
-
   void _showContextMenu(BuildContext context, PdfTextSelectionChangedDetails details) async {
-
     _contextOverlayState = Overlay.of(context)!;
 
     _contextOverlayEntry = OverlayEntry(
@@ -82,7 +81,7 @@ class _BookState extends State<Book> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: details.selectedText));
                     print('Text copied to clipboard: ' + details.selectedText.toString());
-                    //savedWordWithTranslationToFile(bookFile.toString(), details.selectedText.toString());
+                    saveWordWithTranslation(widget.bookPath.toString(), details.selectedText.toString());
                     _pdfViewerController.clearSelection();
                   },
 
@@ -97,7 +96,7 @@ class _BookState extends State<Book> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: details.selectedText));
                     print('Text copied to clipboard: ' + details.selectedText.toString());
-                    //saveWordWithTranslationToFile(bookFile.toString(), details.selectedText.toString());
+                    //saveWordWithTranslation(bookFile.toString(), details.selectedText.toString());
                     _pdfViewerController.clearSelection();
                   },
 
@@ -109,7 +108,38 @@ class _BookState extends State<Book> {
         ),
       ),
     ); // OverlayEntry
+    
     _contextOverlayState!.insert(_contextOverlayEntry!);
+  }
+
+  void _showTranslationOverlay(BuildContext context, PdfTextSelectionChangedDetails details) async {
+    _transOverlayState = Overlay.of(context)!;
+
+    var transOverlayText = await quickTranslation(details.selectedText!);
+    
+    _translateOverlayEntry = OverlayEntry(
+
+      builder: (context) => Positioned(
+        top: details.globalSelectedRegion!.center.dy - 65,
+        left: details.globalSelectedRegion!.bottomLeft.dx,
+        child: Container (
+          margin: const EdgeInsets.all(15.0),
+          padding: const EdgeInsets.all(3.0),
+          color: Colors.white.withOpacity(0.5),
+          child: DefaultTextStyle(
+            style: TextStyle(
+              color: Colors.green.shade400,
+              fontSize: 32.0,
+              fontWeight: FontWeight.bold, 
+            ),
+
+            child: Text(transOverlayText),
+          ), // DefaultTextStyle
+        ), // Container
+      ), // Positioned
+    ); // OverlayEntry
+
+    _transOverlayState!.insert(_translateOverlayEntry!);
   }
   
   @override
@@ -147,18 +177,19 @@ class _BookState extends State<Book> {
           if (details.selectedText != null && _contextOverlayEntry == null) {
             _showContextMenu(context, details);
           }
- 
-          /*
+  
+          
           if (details.selectedText == null && _translateOverlayEntry != null) {
             _translateOverlayEntry!.remove();
-            _translate
+            _translateOverlayEntry = null;
           }
 
           if (details.selectedText != null && _translateOverlayEntry == null) {
             _showTranslationOverlay(context, details);
           }
-            */
+          
         },
+        
         controller: _pdfViewerController,
       ),
     );
