@@ -6,14 +6,14 @@ import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:flutter/services.dart';
 import 'handle_saved_words.dart';
 import 'translate_util.dart';
+import 'flashcard_page.dart';
+
 
 class Book extends StatefulWidget {
-  late File bookPath;
+  final File bookPath;
   
-  Book(this.bookPath) {
-    this.bookPath = bookPath;
-  }
-  
+  Book(this.bookPath);
+     
   @override
   _BookState createState() => _BookState();
 }
@@ -29,14 +29,19 @@ class _BookState extends State<Book> {
 
   OverlayState? _contextOverlayState;
   OverlayState? _transOverlayState;
-  
+
+  late SavedWords sw;
+
   @override
   void initState() {
     _pdfViewerController = PdfViewerController();
+    print("${widget.bookPath}");
     super.initState();
   }
-
+ 
   void _showContextMenu(BuildContext context, PdfTextSelectionChangedDetails details) async {
+    var translationText = await quickTranslation(details.selectedText!);
+    
     _contextOverlayState = Overlay.of(context)!;
 
     _contextOverlayEntry = OverlayEntry(
@@ -85,13 +90,14 @@ class _BookState extends State<Book> {
                     _pdfViewerController.clearSelection();
                   },
 
-                  child: Text('Remember Word', style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w400)),
+                  child: Text('Save Word', style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w400)),
                 ),
               ),
-
+              
               Container(
                 height: 30,
                 width: 100,
+                
                 child: RawMaterialButton(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: details.selectedText));
@@ -99,8 +105,8 @@ class _BookState extends State<Book> {
                     //saveWordWithTranslation(bookFile.toString(), details.selectedText.toString());
                     _pdfViewerController.clearSelection();
                   },
-
-                  child: Text('Listen', style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w400)),
+                  
+                  child: Text('${translationText}', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w400)),
                 ),
               ),
             ]
@@ -110,36 +116,6 @@ class _BookState extends State<Book> {
     ); // OverlayEntry
     
     _contextOverlayState!.insert(_contextOverlayEntry!);
-  }
-
-  void _showTranslationOverlay(BuildContext context, PdfTextSelectionChangedDetails details) async {
-    _transOverlayState = Overlay.of(context)!;
-
-    var transOverlayText = await quickTranslation(details.selectedText!);
-    
-    _translateOverlayEntry = OverlayEntry(
-
-      builder: (context) => Positioned(
-        top: details.globalSelectedRegion!.center.dy - 65,
-        left: details.globalSelectedRegion!.bottomLeft.dx,
-        child: Container (
-          margin: const EdgeInsets.all(15.0),
-          padding: const EdgeInsets.all(3.0),
-          color: Colors.white.withOpacity(0.5),
-          child: DefaultTextStyle(
-            style: TextStyle(
-              color: Colors.green.shade400,
-              fontSize: 32.0,
-              fontWeight: FontWeight.bold, 
-            ),
-
-            child: Text(transOverlayText),
-          ), // DefaultTextStyle
-        ), // Container
-      ), // Positioned
-    ); // OverlayEntry
-
-    _transOverlayState!.insert(_translateOverlayEntry!);
   }
   
   @override
@@ -159,7 +135,51 @@ class _BookState extends State<Book> {
             onPressed: () {
               _pdfViewerKey.currentState?.openBookmarkView();
             },
-          ),
+          ), // IconButton
+
+          Padding(
+            padding:EdgeInsets.only(right: 50.0),
+
+            child: GestureDetector(
+              onTap: () {
+                final file = File(createSavePathFromBookPath(widget.bookPath.path));
+
+                print('${file.path} - ${file.toString()}');
+
+                if (!file.existsSync()) {
+                  Widget okButton = TextButton(child: Text("Ok"), onPressed: () {},);
+                  
+                  AlertDialog noSavesAlert = AlertDialog(
+                    title: const Text('No Saved Words'),
+                    content: SingleChildScrollView(
+                      child: ListBody(
+                        children: <Widget>[
+                          Text('You need to save words'),
+                          Text('to use flashcards'),
+                          okButton,
+                        ],
+                      ),
+                    ), 
+                  );
+                  
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => noSavesAlert),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Flashcard(file.toString())),
+                  ); 
+                }
+              },
+
+              child: Icon(
+                Icons.videogame_asset,
+                size: 26.0,
+              ),
+            ), // GestureDetector
+          ), // Padding
         ],
       ),
       
@@ -177,17 +197,6 @@ class _BookState extends State<Book> {
           if (details.selectedText != null && _contextOverlayEntry == null) {
             _showContextMenu(context, details);
           }
-  
-          
-          if (details.selectedText == null && _translateOverlayEntry != null) {
-            _translateOverlayEntry!.remove();
-            _translateOverlayEntry = null;
-          }
-
-          if (details.selectedText != null && _translateOverlayEntry == null) {
-            _showTranslationOverlay(context, details);
-          }
-          
         },
         
         controller: _pdfViewerController,
