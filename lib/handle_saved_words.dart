@@ -8,9 +8,8 @@ void createSaveDir() {
   var saveDir = Directory('Save/saved_words').createSync(recursive: true);
 }
 
-
-String createSaveFromBookPath(String path) {
-  final saveDir = 'Save/saved_words/';
+String createSavePathFromBookPath(String path) {
+  final saveDir = '/Save/saved_words/';
   final txtExtension = '.txt';
 
   final fileNameStart = path.lastIndexOf('/') + 1;
@@ -22,7 +21,6 @@ String createSaveFromBookPath(String path) {
 
   return savePath;
 }
-
 
 String removeJunkChars(String word) {
   List<String> junkChars =
@@ -36,12 +34,7 @@ String removeJunkChars(String word) {
  return word;
 }
 
-
-void saveWordWithTranslation(String path, String word) async {
-  if (word.contains(' ')) {
-    print('save one word at a time!');
-  }
-  
+void saveWordWithTranslation(String path, String word) async {  
   word = removeJunkChars(word);
   
   createSaveDir();
@@ -50,16 +43,8 @@ void saveWordWithTranslation(String path, String word) async {
 
   final List<String> pathChars = path.split(' ');
 
-  String savePath = "";
-
-  try {
-    savePath = createSaveFromBookPath(path);
-  }
+  String savePath = createSavePathFromBookPath(path);
   
-  on Exception {
-    return;
-  }
-
   var file = File(savePath);
   var sink = file.openWrite(mode: FileMode.append);
 
@@ -70,31 +55,32 @@ void saveWordWithTranslation(String path, String word) async {
 }
 
 class SavedWords {
-  late List<String> words;
-  late List<String> trans;
+  late String savePath;
+  late List<String> words = [];
+  late List<String> trans = [];
+
+  int totalLength = 0;
+
+  SavedWords(this.savePath) {
+    _grabWordsFromFile();
+  }
   
-  late String currBookPath;
-
-  List<String> grabWordsFromFile(String path) {
-    final file = File(path);
-
-    if (!file.existsSync()) {
-      return [];
-    }
-
+  List<String> _grabWordsFromFile() {
+    final file = File(savePath);
+    
     final contents = file.readAsStringSync(encoding: latin1);
 
     final pairs = contents.split(';');
 
-    final words = <String>[];
-    final translations = <String>[];
-
+    words = [];
+    trans = [];
+    
     for (final pair in pairs) {
       final parts = pair.split(',');
       
       if (parts.length == 2) {
         words.add(parts[0]);
-        translations.add(parts[1]);
+        trans.add(parts[1]);
       }
     }
 
