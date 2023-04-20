@@ -3,22 +3,17 @@ import 'package:dolphinsr_dart/dolphinsr_dart.dart';
 import 'handle_saved_words.dart';
 
 
+class Flashcard extends StatelessWidget {
+  final dolphin = DolphinSR();
 
-class Flashcard extends StatefulWidget {
   late String path;
-
+  late SavedWords sw;
+  
   Flashcard(this.path) {
-    this.path = path;
+    sw = SavedWords(path);
+    _createMasters(dolphin);
   }
-
-  @override
-  _FlashcardState createState() => _FlashcardState();
-}
-
-
-class _FlashcardState extends State<Flashcard> {
-  late var sw;
-
+  
   // Visibility Widget Stuff
   bool isQuestionVisible     = true;
   bool isEvaluationRevealed  = false;
@@ -26,6 +21,24 @@ class _FlashcardState extends State<Flashcard> {
   bool isAnswerVisible       = false;
   
   bool isCardLengthReached   = false;
+
+  int masterIdIndex = 0;
+  
+  void _createMasters(DolphinSR dolphin) {
+    for (masterIdIndex = 0; masterIdIndex < sw.trans.length; masterIdIndex++) {
+      dolphin.addMasters([
+          Master(id: masterIdIndex.toString(), fields: [
+              sw.words[masterIdIndex],
+              sw.trans[masterIdIndex],
+            ], combinations: const [
+              Combination(front: [0], back: [1]),
+          ]),
+      ]);
+    }
+
+    var stats = dolphin.summary();
+    print("${stats.due}-${stats.later}-${stats.learning}-${stats.overdue}");
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -44,6 +57,7 @@ class _FlashcardState extends State<Flashcard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          
           children: <Widget>[
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
