@@ -10,9 +10,9 @@ import 'flashcard_page.dart';
 
 
 class Book extends StatefulWidget {
-  final File bookPath;
+  final File bookFile;
   
-  Book(this.bookPath);
+  Book(this.bookFile);
      
   @override
   _BookState createState() => _BookState();
@@ -35,12 +35,13 @@ class _BookState extends State<Book> {
   @override
   void initState() {
     _pdfViewerController = PdfViewerController();
-    print("${widget.bookPath}");
+    //print("${widget.bookFile}");
+    sw = SavedWords(widget.bookFile.path);
     super.initState();
   }
  
   void _showContextMenu(BuildContext context, PdfTextSelectionChangedDetails details) async {
-    var translationText = await quickTranslation(details.selectedText!);
+    var translation = await quickTranslation(details.selectedText!);
     
     _contextOverlayState = Overlay.of(context)!;
 
@@ -86,7 +87,7 @@ class _BookState extends State<Book> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: details.selectedText));
                     print('Text copied to clipboard: ' + details.selectedText.toString());
-                    saveWordWithTranslation(widget.bookPath.toString(), details.selectedText.toString());
+                    sw.saveWordWithTranslation(widget.bookFile.toString(), details.selectedText.toString());
                     _pdfViewerController.clearSelection();
                   },
 
@@ -105,8 +106,8 @@ class _BookState extends State<Book> {
                     //saveWordWithTranslation(bookFile.toString(), details.selectedText.toString());
                     _pdfViewerController.clearSelection();
                   },
-                  
-                  child: Text('${translationText}', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w400)),
+                   
+                  child: Text('${translation}', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w400)),
                 ),
               ),
             ]
@@ -114,7 +115,7 @@ class _BookState extends State<Book> {
         ),
       ),
     ); // OverlayEntry
-    
+
     _contextOverlayState!.insert(_contextOverlayEntry!);
   }
   
@@ -142,12 +143,22 @@ class _BookState extends State<Book> {
 
             child: GestureDetector(
               onTap: () {
-                final file = File(createSavePathFromBookPath(widget.bookPath.path));
-
+                final file = File(sw.createSavePathFromBookPath(widget.bookFile.path));
+                //final file = File(sw.savePath);
+                
                 print('${file.path} - ${file.toString()}');
 
-                if (!file.existsSync()) {
-                  Widget okButton = TextButton(child: Text("Ok"), onPressed: () {},);
+                if (sw.words.length > 0) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Flashcard(file.toString())),
+                  );
+                } else {
+                  Widget okButton = TextButton(child: Text("Ok"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  );
                   
                   AlertDialog noSavesAlert = AlertDialog(
                     title: const Text('No Saved Words'),
@@ -166,14 +177,8 @@ class _BookState extends State<Book> {
                     context,
                     MaterialPageRoute(builder: (context) => noSavesAlert),
                   );
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Flashcard(file.toString())),
-                  ); 
                 }
               },
-
               child: Icon(
                 Icons.videogame_asset,
                 size: 26.0,
@@ -184,7 +189,7 @@ class _BookState extends State<Book> {
       ),
       
       body: SfPdfViewer.file(
-        widget.bookPath,
+        widget.bookFile,
         key: _pdfViewerKey,
         initialZoomLevel: 1,
 
