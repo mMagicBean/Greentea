@@ -34,9 +34,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  
   Future<Uint8List> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+    final result = await FilePicker.platform.pickFiles(allowMultiple: false, withData: true);
 
     if (result == null) {
       throw Exception('File selection cancelled');
@@ -45,6 +44,8 @@ class _HomePageState extends State<HomePage> {
     if (result.files.length != 1) {
       throw Exception('Please select exactly one file');
     }
+
+    print(result.files.first);
     
     final file = result.files.first;
 
@@ -59,6 +60,8 @@ class _HomePageState extends State<HomePage> {
     Uint8List bytes = await _pickFiles();
     
     final newFile = File('Books/newFile.pdf');
+    newFile.createSync(recursive: true);
+    
     newFile.writeAsBytes(bytes!) as Uint8List;    
   }
   
@@ -92,6 +95,7 @@ class _HomePageState extends State<HomePage> {
 
                 onPressed: () {
                   _importFileToBooks();
+                  
                 }
               ),
             ),
