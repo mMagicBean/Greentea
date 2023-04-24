@@ -15,7 +15,6 @@ class Greentea extends StatefulWidget {
   _GreenteaState createState() => _GreenteaState();
 }
 
-
 class _GreenteaState extends State<Greentea> {
   @override
   Widget build(BuildContext context) {
@@ -34,9 +33,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool canReloadBookShelf = false;
+
+  late String impBookName;
   
   Future<Uint8List> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+    final result = await FilePicker.platform.pickFiles(allowMultiple: false, withData: true);
 
     if (result == null) {
       throw Exception('File selection cancelled');
@@ -45,21 +47,29 @@ class _HomePageState extends State<HomePage> {
     if (result.files.length != 1) {
       throw Exception('Please select exactly one file');
     }
+
+    print(result.files.first);
     
     final file = result.files.first;
 
     if (file.bytes == null) {
       throw Exception('Selected file is empty');
     }
+
+    impBookName = file.name;
     
     return file.bytes!;
   }
 
   void _importFileToBooks() async {
     Uint8List bytes = await _pickFiles();
-    
-    final newFile = File('Books/newFile.pdf');
-    newFile.writeAsBytes(bytes!) as Uint8List;    
+
+    final newFile = File('C:/Users/Bean/projects/greentea/Books/${impBookName}');
+    newFile.createSync(recursive: true);
+
+    newFile.writeAsBytes(bytes!);// as Uint8List;    
+
+    canReloadBookShelf = true;
   }
   
   @override
@@ -101,4 +111,3 @@ class _HomePageState extends State<HomePage> {
     ); // MaterialApp
   }
 }
-
