@@ -1,0 +1,7 @@
+întreba,ask;
+comportamentul,Behavior;
+    analiza,analyze;
+ îi antrenează,he trains them;
+ glosează,glossed;
+ pe marginea,on the edge;
+    analiza,analyze;

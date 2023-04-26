@@ -6,13 +6,15 @@ import 'pdfviewer.dart';
 
 
 class BookShelf extends StatefulWidget {
+  BookShelf();
+  
   @override
   _BookShelfState createState() => _BookShelfState();
 }
 
 
 class _BookShelfState extends State<BookShelf> {
-  final List<dynamic> bookNames = [];
+  List<dynamic> bookNames = [];
 
   _BookShelfState() {
     _getBooksFromFolder();
@@ -32,7 +34,7 @@ class _BookShelfState extends State<BookShelf> {
       bookNames.add(book);
     }
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -49,7 +51,6 @@ class _BookShelfState extends State<BookShelf> {
         return SingleChildScrollView(
           child: Column(
             children: <Widget>[
-
               SizedBox(
                 height: 350,
                 width: 250,
@@ -77,14 +78,12 @@ class _BookShelfState extends State<BookShelf> {
                 )
               ),
             ] // children: <Widget>
-
           ), // Column
         );// SingleChildScrollView
       }
     );// GridView.builder
   }
 }
-
 
 
 class BookCover extends StatelessWidget {

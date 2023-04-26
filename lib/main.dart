@@ -33,10 +33,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+<<<<<<< HEAD
   bool canReloadBookShelf = false;
 
   late String impBookName;
   
+=======
+>>>>>>> a29b072da11b1d3a66dc6714fb450c2c7e0e988d
   Future<Uint8List> _pickFiles() async {
     final result = await FilePicker.platform.pickFiles(allowMultiple: false, withData: true);
 
@@ -63,6 +66,7 @@ class _HomePageState extends State<HomePage> {
 
   void _importFileToBooks() async {
     Uint8List bytes = await _pickFiles();
+<<<<<<< HEAD
 
     final newFile = File('C:/Users/Bean/projects/greentea/Books/${impBookName}');
     newFile.createSync(recursive: true);
@@ -70,6 +74,13 @@ class _HomePageState extends State<HomePage> {
     newFile.writeAsBytes(bytes!);// as Uint8List;    
 
     canReloadBookShelf = true;
+=======
+    
+    final newFile = File('Books/newFile.pdf');
+    newFile.createSync(recursive: true);
+    
+    newFile.writeAsBytes(bytes!) as Uint8List;    
+>>>>>>> a29b072da11b1d3a66dc6714fb450c2c7e0e988d
   }
   
   @override
@@ -102,6 +113,7 @@ class _HomePageState extends State<HomePage> {
 
                 onPressed: () {
                   _importFileToBooks();
+                  
                 }
               ),
             ),

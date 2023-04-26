@@ -1,0 +1,7 @@
+
+
+TODO
+=======
+
+[ ] figure out why translation overlay isn't disappearing
+[ ] check if saved words with translations are one word 
