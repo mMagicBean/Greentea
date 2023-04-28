@@ -23,7 +23,7 @@ class _FlashcardState extends State<Flashcard> {
   bool isRevealButtonVisible = true;
   bool isAnswerVisible       = false;
   
-  bool isCardLengthReached   = false;
+  bool isMaxCardLengthReached   = false;
 
   int masterIdIndex = 0;
   int currWordIndex = 0; 
@@ -53,7 +53,29 @@ class _FlashcardState extends State<Flashcard> {
 
   void _revealAnswer() {
     setState(() {
-        isAnswerVisible = true;
+        isAnswerVisible       = true;
+        isRevealButtonVisible = false;
+    });
+  }
+
+  void _getNextCard() {
+    setState(() {
+        // prevent an out of range error 
+        if (currWordIndex >= widget.sw.trans.length - 1) {
+          isMaxCardLengthReached = true;
+          isAnswerVisible       = false;
+          isQuestionVisible     = false;
+          isEvaluationRevealed  = false;
+          isRevealButtonVisible = false;
+
+          return;
+        }
+        
+        currWordIndex++;
+
+        isRevealButtonVisible = true;
+        isEvaluationRevealed  = false;
+        isAnswerVisible       = false;
     });
   }
   
@@ -137,6 +159,18 @@ class _FlashcardState extends State<Flashcard> {
                   ), // Expanded
                 ), // Visibility
 
+                Center(
+                  child: Visibility(
+                    visible: isMaxCardLengthReached,
+                    child: Text(
+                      "No More Flashcards", 
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 80, fontWeight: FontWeight.bold, color: Colors.green),
+                    ),
+                  ), 
+                ), // Center
+                
                 Visibility(
                   visible: isEvaluationRevealed,
                   child: Expanded(
@@ -161,7 +195,7 @@ class _FlashcardState extends State<Flashcard> {
                               ), // SizedBox
 
                               onPressed: () {
-                                
+                                _getNextCard();
                               },
 
                               child: Text("Easy", style: const TextStyle(fontSize: 32, color: Colors.green)),
@@ -180,7 +214,7 @@ class _FlashcardState extends State<Flashcard> {
                               ), // SizedBox
 
                               onPressed: () {
-                                
+                                _getNextCard();
                               },
 
                               child: Text("Hard", style: const TextStyle(fontSize: 32, color: Colors.green)),
