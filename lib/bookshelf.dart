@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import 'dart:typed_data';
 import 'pdfviewer.dart';
+import 'globals.dart' as globals;
 
 
 class BookShelf extends StatefulWidget {
@@ -11,7 +12,6 @@ class BookShelf extends StatefulWidget {
   @override
   _BookShelfState createState() => _BookShelfState();
 }
-
 
 class _BookShelfState extends State<BookShelf> {
   List<dynamic> bookNames = [];
@@ -37,6 +37,10 @@ class _BookShelfState extends State<BookShelf> {
   
   @override
   Widget build(BuildContext context) {
+    if (globals.canReloadBookshelf == true) {
+      setState((){});
+    }
+    
     return GridView.builder(
       padding: const EdgeInsets.all(50),
       itemCount: bookNames.length,
@@ -72,6 +76,11 @@ class _BookShelfState extends State<BookShelf> {
                       context,
                       MaterialPageRoute(builder: (context) => Book(bookNames[index])),
                     );
+
+                    globals.currBookName = bookNames[index].path.replaceAll('Books/', '');
+                    //globals.bookName.replaceAll('Books/', '');
+                    
+                    //print("current book name = ${globals.bookName}");
                   },
 
                   child: BookCover(bookNames[index].path),
