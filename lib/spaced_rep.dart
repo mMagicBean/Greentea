@@ -4,13 +4,13 @@ import 'globals.dart' as globals;
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
+
 class Review {
   late String word;
   late String review;
   late File reviewFile;
 
   String revDir = 'Reviews/';
-
   String tableName = globals.currBookName.replaceAll('.pdf', '').replaceAll('-', '_');
   
   late String newPath;
@@ -27,28 +27,63 @@ class Review {
     
     db = sqlite3.open('Reviews/reviews.db');
 
-    prevTableNames.add(tableName);
+    prevTableNames = _checkPrevTableNames();
 
-
-    // this is temporary
-    for (int i=0; i < prevTableNames.length; i++) {
-      if (tableName != prevTableNames[i]) {
-        db.execute('''
-          CREATE TABLE '$tableName' (
-          id INTEGER NOT NULL PRIMARY KEY,
-          word TEXT NOT NULL,
-          translation TEXT NOT NULL,
-          eval TEXT NOT NULL
-        );
-          ''');
+    print('amount of prev tableNames = ${prevTableNames.length}');
+    
+    if (prevTableNames.length > 0) {
+      for (int i=0; i < prevTableNames.length; i++) {
+        if (tableName != prevTableNames[i]) {
+          db.execute('''
+            CREATE TABLE '$tableName' (
+            id INTEGER NOT NULL PRIMARY KEY,
+            word TEXT NOT NULL,
+            translation TEXT NOT NULL,
+            eval TEXT NOT NULL
+          );
+            ''');
+        }
       }
+    } else {
+      
+      db.execute('''
+        CREATE TABLE '$tableName' (
+        id INTEGER NOT NULL PRIMARY KEY,
+        word TEXT NOT NULL,
+        translation TEXT NOT NULL,
+        eval TEXT NOT NULL
+      );
+        ''');
     }
     
-      
     grabReviewsFromFile();    
   }
 
+  void _saveTableNameToFile() {
+    var file = File('Reviews/saved_table_names.txt');    
+    var sink = file.openWrite(mode: FileMode.append);
+
+    sink.write('$tableName' + ',');
+    sink.close();
+  }
+
+  // this needs to get called before db.execute()
+  List<String> _checkPrevTableNames() {
+    final file = File('Reviews/saved_table_names.txt');
+    file.createSync(recursive: true); 
+    
+    final contents = file.readAsStringSync(encoding: latin1);
+
+    final pairs = contents.split(',');
+    
+    return pairs;
+    //prevTableNames = pairs;
+    //print(prevTableNames);
+  }
+  
   void saveReviewToFile(String word, String translation, String review) {
+    word = word.replaceAll('\n', '');
+    
     final stmt = db.prepare('INSERT INTO $tableName (word, translation, eval) VALUES (?, ?, ?)');
 
     stmt
