@@ -23,28 +23,28 @@ class _BookState extends State<Book> {
   late PdfViewerController _pdfViewerController;
 
   final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
-
+ 
   OverlayEntry? _contextOverlayEntry;
-  OverlayEntry? _translateOverlayEntry;
-
   OverlayState? _contextOverlayState;
-  OverlayState? _transOverlayState;
-
+  
   late SavedWords sw;
-
+  late String translation;
+  
   @override
   void initState() {
     _pdfViewerController = PdfViewerController();
-    //print("${widget.bookFile}");
     sw = SavedWords(widget.bookFile.path);
     super.initState();
   }
- 
-  void _showContextMenu(BuildContext context, PdfTextSelectionChangedDetails details) async {
-    var translation = await quickTranslation(details.selectedText!);
+
+  void _showContextMenu(BuildContext context, PdfTextSelectionChangedDetails details) async {  
+    translation = await quickTranslation(details.selectedText!).whenComplete(() {
+        _contextOverlayEntry?.remove();
+        _contextOverlayEntry = null;
+    });
     
     _contextOverlayState = Overlay.of(context)!;
-
+    
     _contextOverlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: details.globalSelectedRegion!.center.dy + 10,
@@ -101,12 +101,14 @@ class _BookState extends State<Book> {
                 
                 child: RawMaterialButton(
                   onPressed: () {
+                    /*
                     Clipboard.setData(ClipboardData(text: details.selectedText));
                     print('Text copied to clipboard: ' + details.selectedText.toString());
                     //saveWordWithTranslation(bookFile.toString(), details.selectedText.toString());
                     _pdfViewerController.clearSelection();
+                    */
                   },
-                   
+                  
                   child: Text('${translation}', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w400)),
                 ),
               ),
@@ -115,10 +117,13 @@ class _BookState extends State<Book> {
         ),
       ),
     ); // OverlayEntry
-
-    _contextOverlayState!.insert(_contextOverlayEntry!);
+    
+    //_contextOverlayState!.insert(_contextOverlayEntry!);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) =>
+      _contextOverlayState!.insert(_contextOverlayEntry!));
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,14 +149,13 @@ class _BookState extends State<Book> {
             child: GestureDetector(
               onTap: () {
                 final file = File(sw.createSavePathFromBookPath(widget.bookFile.path));
-                //final file = File(sw.savePath);
-                
+                                
                 print('${file.path} - ${file.toString()}');
 
-                if (sw.words.length > 0) {
+                if (sw.words.length > 0 || !file.existsSync()) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Flashcard(file.toString())),
+                    MaterialPageRoute(builder: (context) => Flashcard(file.path, sw)),
                   );
                 } else {
                   Widget okButton = TextButton(child: Text("Ok"),
@@ -179,6 +183,7 @@ class _BookState extends State<Book> {
                   );
                 }
               },
+              
               child: Icon(
                 Icons.videogame_asset,
                 size: 26.0,
@@ -193,10 +198,10 @@ class _BookState extends State<Book> {
         key: _pdfViewerKey,
         initialZoomLevel: 1,
 
-        onTextSelectionChanged: (PdfTextSelectionChangedDetails details) {
+        onTextSelectionChanged: (PdfTextSelectionChangedDetails details) async {
           if (details.selectedText == null && _contextOverlayEntry != null) {
             _contextOverlayEntry!.remove();
-            _contextOverlayEntry = null;
+            _contextOverlayEntry = null;            
           }
 
           if (details.selectedText != null && _contextOverlayEntry == null) {
