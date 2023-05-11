@@ -11,8 +11,8 @@ class Review {
   late File reviewFile;
 
   String revDir = 'Reviews/';
-  String tableName = globals.currBookName.replaceAll('.pdf', '').replaceAll('-', '_');
-  
+
+  late String tableName;
   late String newPath;
   late var db;
 
@@ -27,25 +27,14 @@ class Review {
     
     db = sqlite3.open('Reviews/reviews.db');
 
-    prevTableNames = _checkPrevTableNames();
+    tableName = globals.currBookName.replaceAll('.pdf', '').replaceAll('-', '_');
+    prevTableNames = _getPrevTableNames();
 
-    print('amount of prev tableNames = ${prevTableNames.length}');
-    
-    if (prevTableNames.length > 0) {
-      for (int i=0; i < prevTableNames.length; i++) {
-        if (tableName != prevTableNames[i]) {
-          db.execute('''
-            CREATE TABLE '$tableName' (
-            id INTEGER NOT NULL PRIMARY KEY,
-            word TEXT NOT NULL,
-            translation TEXT NOT NULL,
-            eval TEXT NOT NULL
-          );
-            ''');
-        }
-      }
-    } else {
-      
+    // check if table already exists before creating it 
+    if (_checkIfTableNameExists(prevTableNames, tableName) != true) {
+      _saveTableNameToFile(tableName);
+
+      // create table 
       db.execute('''
         CREATE TABLE '$tableName' (
         id INTEGER NOT NULL PRIMARY KEY,
@@ -56,19 +45,23 @@ class Review {
         ''');
     }
     
+    print('amount of prev tableNames = ${prevTableNames.length}');
     grabReviewsFromFile();    
   }
 
-  void _saveTableNameToFile() {
+  void _saveTableNameToFile(String tName) {
+    if (tName == null) {
+      return;
+    }
+    
     var file = File('Reviews/saved_table_names.txt');    
     var sink = file.openWrite(mode: FileMode.append);
 
-    sink.write('$tableName' + ',');
+    sink.write('$tName' + ',');
     sink.close();
   }
 
-  // this needs to get called before db.execute()
-  List<String> _checkPrevTableNames() {
+  List<String> _getPrevTableNames() {
     final file = File('Reviews/saved_table_names.txt');
     file.createSync(recursive: true); 
     
@@ -77,8 +70,16 @@ class Review {
     final pairs = contents.split(',');
     
     return pairs;
-    //prevTableNames = pairs;
-    //print(prevTableNames);
+  }
+
+  bool _checkIfTableNameExists(List<String> tNames, String newTable) {
+    for (int i=0; i < tNames.length; i++) {
+      if (tNames[i] == newTable) {
+        return true;
+      } 
+    }
+
+    return false;
   }
   
   void saveReviewToFile(String word, String translation, String review) {
