@@ -46,7 +46,7 @@ class Review {
     }
     
     print('amount of prev tableNames = ${prevTableNames.length}');
-    grabReviewsFromFile();    
+    //grabReviewsFromFile();    
   }
 
   void _saveTableNameToFile(String tName) {
@@ -65,8 +65,8 @@ class Review {
     final file = File('Reviews/saved_table_names.txt');
     file.createSync(recursive: true); 
     
-    final contents = file.readAsStringSync(encoding: latin1);
-
+    final contents = file.readAsStringSync(); 
+    
     final pairs = contents.split(',');
     
     return pairs;
@@ -81,21 +81,26 @@ class Review {
 
     return false;
   }
-  
-  void saveReviewToFile(String word, String translation, String review) {
-    word = word.replaceAll('\n', '');
-    
-    final stmt = db.prepare('INSERT INTO $tableName (word, translation, eval) VALUES (?, ?, ?)');
 
-    stmt
-      ..execute(['$word', '$translation', '$review']);
-      
+  void saveReviewToFile(String sWord, String translation, String review) {
+    sWord = sWord.replaceAll('\n', '');
+
     final ResultSet resultSet = db.select('SELECT * FROM $tableName');
 
     for (final Row row in resultSet) {
       print('${tableName}[id: ${row['id']}, word: ${row['word']}]');
+
+      // check for duplicates before inserting
+      if (row['word'] == sWord) {
+        return;   
+      } 
     }
 
+    final stmt = db.prepare('INSERT INTO $tableName (word, translation, eval) VALUES (?, ?, ?)');
+
+    stmt
+    ..execute(['$sWord', '$translation', '$review']);
+    
     db.createFunction(
       functionName: 'dart_version',
       argumentCount: const AllowedArgumentCount(0),
@@ -104,12 +109,4 @@ class Review {
 
     print(db.select('Select dart_version()'));
   }
-
-  void grabReviewsFromFile() {
-    var contents = reviewFile.readAsStringSync(encoding: latin1);
-
-    late List<String> word;
-    late List<String> trans;
-    late List<String> eval;
-  }  
 }
