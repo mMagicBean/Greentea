@@ -1,16 +1,5 @@
 # greentea
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![greentea](https://github.com/mMagicBean/Greentea/assets/50392507/cf3cf7ba-5c27-4f30-ac42-9449a289e5c9)
+![flashcards](https://github.com/mMagicBean/Greentea/assets/50392507/9643f9b2-fd1d-4dfc-bce8-8464c5ea686b)
+![image](https://github.com/mMagicBean/Greentea/assets/50392507/55105453-fec1-403f-a9ab-96b94acb92f9)
